@@ -1308,6 +1308,25 @@ export default function MemeEditor({ template, onReset }: MemeEditorProps) {
         }
     }, [isMobileDevice, calculateFontSize, transformText]);
 
+    const drawStrokes = useCallback((ctx: CanvasRenderingContext2D) => {
+        for (const stroke of strokes.concat(currentStroke ? [currentStroke] : [])) {
+            if (!stroke || !stroke.points.length) continue;
+            ctx.save();
+            ctx.strokeStyle = stroke.color;
+            ctx.lineWidth = stroke.size;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.globalCompositeOperation = stroke.eraser ? 'destination-out' : 'source-over';
+            ctx.beginPath();
+            ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+            for (let i = 1; i < stroke.points.length; i++) {
+                ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+    }, [strokes, currentStroke]);
+
     const draw = useCallback(async () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -1569,7 +1588,7 @@ export default function MemeEditor({ template, onReset }: MemeEditorProps) {
                 ctx.restore();
             }
         };
-    }, [template, textSettings, drawText, waitForFont, isDraggingImage, isResizingImage, isRotatingImage, isDragging, imageOverlays, selectedImageIndex, selectedTextIndex, textBoxes, texts, loadAndCacheImage, strokes, currentStroke]);
+    }, [template, textSettings, drawText, waitForFont, isDraggingImage, isResizingImage, isRotatingImage, isDragging, imageOverlays, selectedImageIndex, selectedTextIndex, textBoxes, texts, loadAndCacheImage, strokes, currentStroke, drawStrokes, isMobileDevice]);
 
 
 
@@ -1780,24 +1799,6 @@ export default function MemeEditor({ template, onReset }: MemeEditorProps) {
     const handleEraseAll = () => {
         setStrokes([]);
     };
-    const drawStrokes = (ctx: CanvasRenderingContext2D) => {
-        for (const stroke of strokes.concat(currentStroke ? [currentStroke] : [])) {
-            if (!stroke || !stroke.points.length) continue;
-            ctx.save();
-            ctx.strokeStyle = stroke.color;
-            ctx.lineWidth = stroke.size;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.globalCompositeOperation = stroke.eraser ? 'destination-out' : 'source-over';
-            ctx.beginPath();
-            ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-            for (let i = 1; i < stroke.points.length; i++) {
-                ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
-            }
-            ctx.stroke();
-            ctx.restore();
-        }
-    };
     useEffect(() => {
         if (!isDrawingMode) return;
         const canvas = canvasRef.current;
@@ -1822,7 +1823,8 @@ export default function MemeEditor({ template, onReset }: MemeEditorProps) {
             canvas.removeEventListener('touchmove', touchMove);
             window.removeEventListener('touchend', touchEnd);
         };
-    }, [isDrawingMode, isEraser, drawColor, drawSize, currentStroke, isDrawing]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isDrawingMode, isEraser, drawColor, drawSize, currentStroke, isDrawing, handleDrawStart, handleDrawMove, handleDrawEnd]);
 
     return (
         <motion.section
@@ -1851,7 +1853,7 @@ export default function MemeEditor({ template, onReset }: MemeEditorProps) {
                     <canvas
                         ref={canvasRef}
                         className="border-2 border-[#1a1a1a] w-[400px] max-sm:w-full h-fit bg-white select-none"
-                        style={{ boxShadow: '4px 4px 0px #1a1a1a' }}
+                        style={{ boxShadow: '4px 4px 0px #1a1a1a', touchAction: 'none' }}
                         onMouseDown={isDrawingMode ? (e) => handleDrawStart(e.nativeEvent) : handleMouseDown}
                         onMouseMove={isDrawingMode ? (e) => handleDrawMove(e.nativeEvent) : handleMouseMove}
                         onMouseUp={isDrawingMode ? (e) => handleDrawEnd(e.nativeEvent) : handleMouseUp}
@@ -1859,7 +1861,6 @@ export default function MemeEditor({ template, onReset }: MemeEditorProps) {
                         onTouchStart={isDrawingMode ? (e) => handleDrawStart(e.nativeEvent) : handleTouchStart}
                         onTouchMove={isDrawingMode ? (e) => handleDrawMove(e.nativeEvent) : handleTouchMove}
                         onTouchEnd={isDrawingMode ? (e) => handleDrawEnd(e.nativeEvent) : handleTouchEnd}
-                        style={{ touchAction: 'none' }}
                     />
 
                     <div className={`flex items-center space-x-2 mt-3 ${isDrawingMode ? '' : 'hidden'}`}>

@@ -1,1 +1,1 @@
-export const baseUrl = 'https://www.memehub.mom'
+export const baseUrl = 'https://www.zenviqdigital.in'
