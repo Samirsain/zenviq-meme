@@ -60,6 +60,9 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react", "framer-motion"],
   },
 
+  // Silence Next.js 16 Turbopack error when using custom webpack config
+  turbopack: {},
+
   // Webpack optimizations
   webpack: (config, { dev, isServer }) => {
     // Only run optimizations in production
