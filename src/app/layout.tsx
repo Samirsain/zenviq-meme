@@ -1,0 +1,119 @@
+import type { Metadata } from "next";
+import { Bricolage_Grotesque, Epilogue } from "next/font/google";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import PageTransition from "@/components/PageTransition";
+import "./globals.css";
+import Providers from "./Provider";
+import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
+
+import { Toaster } from "sonner";
+import { siteConfig } from "@/data/site-config";
+import OGImage from "./og.png";
+
+// Only load the essential font for initial page load
+const bricolage_grotesque_init = Bricolage_Grotesque({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+});
+
+const epilogue_init = Epilogue({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["800", "900"],
+  variable: "--font-epilogue",
+});
+
+export const metadata: Metadata = {
+  keywords: siteConfig.keywords,
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
+  metadataBase: new URL(siteConfig.url),
+  openGraph: {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: OGImage.src,
+        width: OGImage.width,
+        height: OGImage.height,
+        alt: siteConfig.name,
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    site: siteConfig.twitterHandle,
+    card: "summary_large_image",
+    images: [
+      {
+        url: OGImage.src,
+        width: OGImage.width,
+        height: OGImage.height,
+        alt: siteConfig.name,
+      },
+    ],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="google-adsense-account" content="ca-pub-1916939586711533" />
+      </head>
+      <body
+        className={`${bricolage_grotesque_init.className} ${epilogue_init.variable} antialiased min-h-screen bg-[#fffbea] relative`}
+        style={{
+          fontFamily: `var(--font-bricolage-grotesque), Impact, "Arial Black", "Helvetica Neue", Arial, sans-serif`
+        }}
+      >
+        <Providers>
+          <PageTransition>
+            <Navbar />
+            <main>{children}</main>
+            <Footer />
+          </PageTransition>
+          <Toaster />
+        </Providers>
+        <Analytics />
+        <Script
+          defer
+          data-domain="memehub.fardeen.tech"
+          src="https://analytics-code.vercel.app/tracking-script.js"
+        />
+        <Script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1916939586711533"
+          strategy="beforeInteractive"
+          crossOrigin="anonymous"
+        />
+      </body>
+    </html>
+  );
+}
